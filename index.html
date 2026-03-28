@@ -67,6 +67,12 @@
                             <label for="urlInput" class="block text-sm font-semibold text-gray-700 mb-1.5">출발전제출서류 URL</label>
                             <input type="text" id="urlInput" oninput="updatePreview()" placeholder="예: https://indadady.github.io/Departure_Documents/" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition shadow-sm">
                         </div>
+                        
+                        <!-- 스마트가이드북 URL 입력 (추가됨) -->
+                        <div>
+                            <label for="guidebookInput" class="block text-sm font-semibold text-gray-700 mb-1.5">스마트 가이드북 URL</label>
+                            <input type="text" id="guidebookInput" oninput="updatePreview()" placeholder="예: https://indadady.github.io/260512_Osak" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition shadow-sm border-indigo-200 bg-indigo-50/30">
+                        </div>
                     </div>
 
                     <!-- 작성 팁박스 -->
@@ -86,8 +92,8 @@
                         미리보기 (실시간 반영)
                     </h4>
                     
-                    <!-- 텍스트 에리어 높이를 부모에 꽉 차게 설정 (최소 450px 보장) -->
-                    <textarea id="emailPreview" readonly class="w-full flex-grow min-h-[450px] p-5 border border-gray-200 rounded-xl bg-gray-50 text-[14px] text-gray-800 leading-relaxed focus:outline-none resize-none shadow-inner"></textarea>
+                    <!-- 텍스트 에리어 대신 contenteditable div를 사용하여 HTML(색상) 적용 및 메일 복사 지원 -->
+                    <div id="emailPreview" contenteditable="true" spellcheck="false" class="w-full flex-grow min-h-[450px] p-5 border border-gray-200 rounded-xl bg-gray-50 text-[14px] text-gray-800 leading-relaxed focus:outline-none shadow-inner overflow-y-auto whitespace-pre-wrap"></div>
                 </div>
 
             </div>
@@ -128,55 +134,71 @@
         // 템플릿 업데이트 함수
         function updatePreview() {
             const school = document.getElementById('schoolInput').value || '[학교/기관명]';
-            const eventName = document.getElementById('eventInput').value || '해외 문화탐방';
+            const eventName = document.getElementById('eventInput').value || '[행사명]';
             const url = document.getElementById('urlInput').value || 'https://indadady.github.io/Departure_Documents/';
+            const guidebookUrl = document.getElementById('guidebookInput').value || '[스마트 가이드북 URL]';
             const previewBox = document.getElementById('emailPreview');
 
-            // 템플릿 내용
-            const template = `${school} 실무 이행 보고 및 행정 서류 대체 시스템 안내
+            // 이메일에 복사될 때 스타일이 유지되도록 인라인 CSS 적용 (형광펜 효과)
+            const hlSchool = `<strong style="color: #4f46e5; background-color: #eef2ff; padding: 2px 4px; border-radius: 4px;">${school}</strong>`;
+            const hlEvent = `<strong style="color: #059669; background-color: #ecfdf5; padding: 2px 4px; border-radius: 4px;">${eventName}</strong>`;
+
+            // 템플릿 내용 (HTML 렌더링 지원)
+            const template = `${hlSchool} 실무 이행 보고 및 행정 서류 대체 시스템 안내
 
 안녕하십니까,
-귀기관의 안전하고 성공적인 ${eventName} 일정 진행을 위해 당사는 교육청 지침과 해외 현지 실정을 합리적으로 조율한 **[투어메이커 스마트 행정 시스템]**을 운영하고 있습니다. 본 안내는 행정적 완결성을 높이고 실무적 오해를 방지하기 위해 작성되었습니다.
+귀기관의 안전하고 성공적인 ${hlEvent} 일정 진행을 위해 당사는 교육청 지침과 해외 현지 실정을 합리적으로 조율한 <strong>[투어메이커 스마트 행정 시스템]</strong>을 운영하고 있습니다. 본 안내는 행정적 완결성을 높이고 실무적 오해를 방지하기 위해 작성되었습니다.
 
 1. 실무 선제 이행 및 자금 집행 현황
 당사는 기관의 예산 절감과 안정적인 행사 준비를 위해 아래와 같이 선제적 조치를 완료하였습니다.
 - 항공권 확보: 유류할증료 인상 방어 및 좌석 확약을 위해, 선금 입금 전임에도 당사 자금으로 발권을 완료하였습니다. (첨부된 E-Ticket 확인 요망)
-- 현지 인프라 수배: 호텔 및 차량 예약 확정을 위한 현지 보증금(Deposit) 지불 예정입니다. 
+- 현지 인프라 수배: <strong>해외 호텔 및 차량 예약 확정을 위한 현지 보증금(Deposit) 및 전체 비용을 당사 자금으로 선지출</strong>하여 안정적인 현지 인프라를 확보하고 있습니다. 
 - 행정 절차: 본 행사는 해외 연수의 특수성을 고려하여 선금(Advance Payment) 신청을 통해 진행하되, 입금 전이라도 당사가 리스크를 안고 실무를 선행하고 있음을 보고드립니다.
 
 2. 카테고리별 해외 서류 대체 및 관리 원칙
 해외 현지 시스템상 국내 양식과 100% 일치하는 서류 징구가 불가한 항목은 아래와 같이 대체 증빙을 통해 행정적 근거를 마련하였습니다.
 🏠 숙박: 현지 영업허가증(License) 및 예약확인서로 안전성을 확인합니다.
 🚌 차량: 현지 운수국 인가 운송사업허가증 및 보험증권으로 합법성을 증명합니다.
-🍱 식사: 예정 또는 확정된 **식단표(메뉴)**를 통해 위생과 영양 상태를 관리합니다.
-📂 기타: 내국인 인솔자 성범죄조회서 제출 및 [T-safe24] 시스템을 통한 실시간 안전 모니터링을 지원합니다. 추후 추가되는 서류는 실시간으로 아래 링크의 '출발전제출서류'함에 업로드 하겠습니다. 
+🍱 식사: 예정 또는 확정된 <strong>식단표(메뉴)</strong>를 통해 위생과 영양 상태를 관리합니다.
+📂 기타 및 추가 서류: 내국인 인솔자 성범죄조회서 제출 및 [T-safe24] 시스템을 통해 실시간 안전 모니터링을 지원합니다. 또한, 해외 현지 특수성으로 인해 국내 기준대로 즉시 징구할 수 없는 기타 요구 서류들은 현지 상황에 맞는 최적의 대체·보완 증빙으로 갈음하여, 추후 아래 링크의 '출발전제출서류'함에 실시간으로 업로드하겠습니다. 
 
 3. 투어메이커의 역할 및 관리 범위
 당사는 용역 수행사로서 현지 업체와의 원활한 소통과 행정적 보완을 위해 최선을 다합니다. 
 다만, 천재지변이나 현지 법령 변경 등 당사의 통제 범위를 벗어난 불가항력적 상황에 대해서는 기관과 긴밀히 협의하여 최선의 대안을 도출하는 '전문적인 중재자' 역할을 수행합니다.
 
-📂 출발전제출서류: ${url}
-🛡️ 실시간 안전 시스템: https://indadady.github.io/T-safe24/
-(GPS 기반 실시간 위치 확인 및 24시간 비상 대응망 가동을 통해, 종이 서류상의 후송 대책을 넘어 현장 최적화된 학생 안전 케어 시스템을 제공합니다.)
+📂 출발전제출서류: <a href="${url}" style="color: #2563eb; text-decoration: underline;" target="_blank">${url}</a>
+
+🛡️ 실시간 안전 시스템 (T-safe24): <a href="https://indadady.github.io/T-safe24/" style="color: #2563eb; text-decoration: underline;" target="_blank">https://indadady.github.io/T-safe24/</a>
+(단순한 종이 서류상의 '학생 후송 대책'을 넘어, 당사는 자체 구축한 [T-safe24]를 통해 ① GPS 기반 학생/인솔자 실시간 위치 확인, ② 24시간 현지-국내 비상 대응망 가동, ③ 행사 지역 인근 최적 병원망 연동 등 실제 현장 상황에 최적화된 입체적인 학생 안전 케어 시스템을 제공합니다.)
+
+📱 전용 스마트 가이드북: <a href="${guidebookUrl}" style="color: #2563eb; text-decoration: underline;" target="_blank">${guidebookUrl}</a>
+(일정표, 참가자 안내서, 현장 운영 도구를 하나로 통합한 투어메이커의 핵심 디지털 자산입니다. 출국 전 사전 안내부터 현장 인솔까지 스마트 가이드북 하나로 완벽하게 통제하여 기관의 행정 부담을 최소화합니다.)
 
 당사는 종이 서류 이상의 실질적인 관리 시스템으로 귀기관의 여정을 전문적으로 보좌하겠습니다.`;
 
-            previewBox.value = template;
+            // innerHTML로 삽입하여 색상 태그가 실제 색상으로 보이도록 처리
+            previewBox.innerHTML = template;
         }
 
-        // 복사 기능 함수
+        // 복사 기능 함수 (div 내용을 복사하기 위한 로직 수정)
         function copyToClipboard() {
             const previewBox = document.getElementById('emailPreview');
             const statusText = document.getElementById('copyStatus');
             
-            previewBox.select();
-            previewBox.setSelectionRange(0, 99999); 
+            // div 내의 텍스트(HTML 서식 포함) 선택
+            const range = document.createRange();
+            range.selectNodeContents(previewBox);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
             
             try {
+                // 서식이 포함된 상태로 클립보드에 복사
                 document.execCommand('copy');
                 statusText.style.opacity = '1';
                 setTimeout(() => {
                     statusText.style.opacity = '0';
+                    selection.removeAllRanges(); // 복사 후 선택 영역 해제
                 }, 2500);
             } catch (err) {
                 alert("복사에 실패했습니다. 텍스트를 직접 드래그하여 복사해주세요.");
