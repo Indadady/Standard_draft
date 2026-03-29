@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투어메이커 행정 통합 포털 v3.6 (Final Pro)</title>
+    <title>투어메이커 행정 통합 포털 v3.8 (Master Pro)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-JLH9GD9SVR"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -16,242 +17,256 @@
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap');
         body { font-family: 'Pretendard', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
-        /* [인쇄 설정 가이드] */
+        /* [실무 인쇄 전용 엔진 - 핵심 로직] */
+        @page {
+            size: A4;
+            margin: 0; /* 브라우저 여백 강제 제거 */
+        }
         @media print {
-            /* 인쇄 시 불필요한 모든 UI 숨김 */
-            .no-print, header, section.lg:col-span-4, .flex.border-b, footer { display: none !important; }
+            /* 인쇄 시 모든 UI 및 메일 탭 숨김 */
+            .no-print, header, footer, section.lg:col-span-4, .flex.border-b, #view-email { 
+                display: none !important; 
+            }
             
-            /* 레이아웃 제약 해제 */
-            body, html { background: white !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
-            main { display: block !important; width: 100% !important; padding: 0 !important; margin: 0 !important; height: auto !important; overflow: visible !important; }
-            section { display: block !important; width: 100% !important; height: auto !important; overflow: visible !important; }
-            .flex-grow { display: block !important; height: auto !important; overflow: visible !important; padding: 0 !important; background: white !important; }
+            /* 레이아웃 초기화 */
+            body, html { 
+                background: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 210mm !important; 
+                height: 297mm !important; 
+                overflow: visible !important;
+            }
             
-            /* 안내문 숨기고 보고서 강제 노출 */
-            #view-email { display: none !important; }
-            #view-report { display: block !important; visibility: visible !important; position: static !important; width: 100% !important; }
+            main { display: block !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            section.lg:col-span-8 { display: block !important; width: 100% !important; }
+            .flex-grow { display: block !important; background: white !important; padding: 0 !important; }
+
+            /* 보고서 영역 강제 노출 및 꽉 차게 설정 */
+            #view-report { 
+                display: block !important; 
+                visibility: visible !important; 
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 210mm !important;
+            }
             
-            /* A4 용지 규격화 */
             #reportPaper { 
                 border: none !important; 
                 box-shadow: none !important; 
-                margin: 0 auto !important; 
-                padding: 15mm !important; 
+                margin: 0 !important; 
+                padding: 15mm 20mm !important; /* 내부 여백만 유지 */
                 width: 210mm !important;
-                min-height: auto !important;
+                height: 297mm !important;
+                box-sizing: border-box;
+                background: white !important;
             }
+            
             .stamp-container { border: none !important; }
             .resize-handle { display: none !important; }
         }
 
-        .report-table th, .report-table td { border: 1px solid #1a202c; padding: 10px; font-size: 13px; line-height: 1.4; }
-        .report-table th { background-color: #f8fafc; font-weight: 800; color: #334155; }
+        /* 표 인쇄 품질 강화 */
+        .report-table th, .report-table td { border: 1.5px solid #111; padding: 10px 8px; font-size: 13.5px; line-height: 1.5; color: #000; }
+        .report-table th { background-color: #f1f5f9 !important; font-weight: 800; }
         
-        .tab-active { border-bottom: 3px solid #4f46e5; color: #4f46e5; font-weight: 800; }
+        .tab-active { border-bottom: 3.5px solid #4f46e5; color: #4f46e5; font-weight: 800; }
         textarea::-webkit-scrollbar { width: 6px; }
         textarea::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
         input:focus, select:focus, textarea:focus { border-color: #4f46e5; ring: 2px; ring-color: #4f46e5; }
 
-        .stamp-container {
-            position: absolute;
-            cursor: move;
-            user-select: none;
-            z-index: 50;
-        }
-        .stamp-image {
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            opacity: 0.9;
-        }
+        /* 스마트 직인 시스템 */
+        .stamp-container { position: absolute; cursor: move; user-select: none; z-index: 50; }
+        .stamp-image { width: 100%; height: 100%; pointer-events: none; opacity: 0.95; }
         .resize-handle {
-            position: absolute;
-            right: -5px;
-            bottom: -5px;
-            width: 12px;
-            height: 12px;
-            background: #4f46e5;
-            cursor: nwse-resize;
-            border-radius: 2px;
-            z-index: 60;
+            position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px;
+            background: #4f46e5; cursor: nwse-resize; border-radius: 3px; z-index: 60;
         }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
     <!-- [상단 헤더] -->
-    <header class="no-print bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+    <header class="no-print bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
         <div class="flex items-center gap-3">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHfgIX70O5k6Anuo0UgALIdaG9jSga9auHu3uyz0uEirylGPAJnjN_qQbvEGMUvPqUQf_g9FMNUHRxlDcUBf4vZ3Mpy4TnA9WxbmzWYK11gt2zuy_Irl4wctNFjcjLyPo0GPXV792o_J7L9guRMuDfeC1gy7USwywjYbECZgzcsHybuGRRAXAnO1eNmP8/s320/logo.png" alt="투어메이커" class="h-6">
-            <h1 class="text-lg font-extrabold text-slate-800 tracking-tight">행정 통합 포털 <span class="text-indigo-600 text-sm ml-1 font-normal">v3.6 PRO</span></h1>
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHfgIX70O5k6Anuo0UgALIdaG9jSga9auHu3uyz0uEirylGPAJnjN_qQbvEGMUvPqUQf_g9FMNUHRxlDcUBf4vZ3Mpy4TnA9WxbmzWYK11gt2zuy_Irl4wctNFjcjLyPo0GPXV792o_J7L9guRMuDfeC1gy7USwywjYbECZgzcsHybuGRRAXAnO1eNmP8/s320/logo.png" alt="투어메이커" class="h-7">
+            <h1 class="text-xl font-extrabold text-slate-800 tracking-tighter">행정 통합 포털 <span class="text-indigo-600 text-xs ml-1 font-normal bg-indigo-50 px-2 py-0.5 rounded-full">v3.8 PRO</span></h1>
         </div>
-        <div class="flex gap-3">
-            <button onclick="copyEmail()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-emerald-700 transition-all flex items-center gap-2">
+        <div class="flex gap-4">
+            <button onclick="copyEmail()" class="bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-emerald-700 transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                 안내문 복사
             </button>
-            <button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
+            <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2H7a2 2 0 00-2 2v4m14 4h-2a2 2 0 00-2-2H9a2 2 0 00-2 2v4h14z"></path></svg>
                 보고서 인쇄/PDF
             </button>
         </div>
     </header>
 
-    <main class="max-w-[1800px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <main class="max-w-[1900px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- [왼쪽: 입력 섹션] -->
+        <!-- [좌측: 입력 영역] -->
         <section class="no-print lg:col-span-4 space-y-6 overflow-y-auto max-h-[calc(100vh-140px)] pr-2">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-sm font-extrabold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                    보고 데이터 입력
+            <div class="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
+                <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    보고서 데이터 구성
                 </h2>
                 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">발행 주체 선택</label>
-                        <select id="repSelect" onchange="syncAll()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-indigo-700 shadow-sm">
+                        <label class="block text-xs font-black text-slate-700 mb-2">발행 주체 (직인 자동매칭)</label>
+                        <select id="repSelect" onchange="syncAll()" class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-3.5 text-sm focus:border-indigo-500 outline-none font-extrabold text-indigo-700 shadow-sm transition-all">
                             <option value="corp">주식회사 투어메이커 (대표 이재명)</option>
                             <option value="indiv" selected>투어메이커 (대표 허나연)</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">행사 성격</label>
+                        <label class="block text-xs font-black text-slate-700 mb-2">행사 성격</label>
                         <div class="flex gap-2">
-                            <button onclick="setTripType('국외')" id="type-overseas" class="flex-1 py-2 px-3 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-bold transition-all">국외(해외)</button>
-                            <button onclick="setTripType('국내')" id="type-domestic" class="flex-1 py-2 px-3 rounded-lg border border-slate-200 text-slate-500 text-xs font-bold transition-all">국내</button>
+                            <button onclick="setTripType('국외')" id="type-overseas" class="flex-1 py-3 px-3 rounded-2xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-black transition-all shadow-sm">국외(해외)</button>
+                            <button onclick="setTripType('국내')" id="type-domestic" class="flex-1 py-3 px-3 rounded-2xl border-2 border-slate-100 text-slate-400 text-xs font-bold transition-all hover:bg-slate-50">국내</button>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">학교/기관명</label>
-                        <input type="text" id="schoolInput" oninput="syncAll()" placeholder="예: 문곡중학교" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">행사명</label>
-                        <input type="text" id="eventInput" oninput="syncAll()" placeholder="예: 2026 국외테마학습여행(일본)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="pt-2 border-t border-slate-100 space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">체험지역</label>
-                            <input type="text" id="regionInput" oninput="syncAll()" placeholder="예: 일본(오사카 등)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <label class="block text-xs font-black text-slate-700 mb-1.5">학교/기관명</label>
+                            <input type="text" id="schoolInput" oninput="syncAll()" placeholder="예: 문곡중학교" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">제출 날짜</label>
-                            <input type="text" id="dateInput" oninput="syncAll()" placeholder="예: 2026년 3월 30일" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-emerald-700">
+                            <label class="block text-xs font-black text-slate-700 mb-1.5">행사명</label>
+                            <input type="text" id="eventInput" oninput="syncAll()" placeholder="2026 국외테마학습여행(일본)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-semibold">
                         </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">체험기간</label>
-                            <input type="text" id="periodInput" oninput="syncAll()" placeholder="예: 2026. 5. 12. ~ 5. 15." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">체험지역</label>
+                                <input type="text" id="regionInput" oninput="syncAll()" placeholder="일본(오사카 등)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5 text-emerald-600 italic">보고서 제출일</label>
+                                <input type="text" id="dateInput" oninput="syncAll()" class="w-full bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-800">
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">인원 정보</label>
-                            <input type="text" id="countInput" oninput="syncAll()" placeholder="예: 학생 125명, 인솔교사 8명" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">체험기간</label>
+                                <input type="text" id="periodInput" oninput="syncAll()" placeholder="2026. 5. 12. ~ 5. 15." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1.5">인원 정보</label>
+                                <input type="text" id="countInput" oninput="syncAll()" placeholder="학생 125명, 교사 8명" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">출발전 제출서류 URL</label>
-                        <input type="text" id="docUrlInput" oninput="syncAll()" placeholder="https://is.gd/bJWofn" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">스마트 가이드북 URL</label>
-                        <input type="text" id="guideInput" oninput="syncAll()" placeholder="https://indadady.github.io/260512_Osaka/" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">숙박시설 정보</label>
-                        <textarea id="hotelInput" oninput="syncAll()" placeholder="오사카 가든 파크 호텔&#10;나라 교토 힐튼 호텔 등" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-24"></textarea>
+                    <div class="pt-2 border-t border-slate-100 space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-indigo-500 mb-1.5 uppercase tracking-tight">출발전 제출서류 URL (학교별)</label>
+                            <input type="text" id="docUrlInput" oninput="syncAll()" placeholder="https://indadady.github.io/Departure_Documents/" class="w-full bg-indigo-50/30 border border-indigo-100 rounded-xl px-4 py-3 text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-indigo-500 mb-1.5 uppercase tracking-tight">스마트 가이드북 URL</label>
+                            <input type="text" id="guideInput" oninput="syncAll()" placeholder="https://indadady.github.io/260512_Osaka/" class="w-full bg-indigo-50/30 border border-indigo-100 rounded-xl px-4 py-3 text-xs font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-1.5">숙박시설 정보 (다수 입력 시 줄바꿈)</label>
+                            <textarea id="hotelInput" oninput="syncAll()" placeholder="호텔명을 입력하세요." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none h-24 shadow-inner resize-none"></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 직인 컨트롤 -->
-                <div class="mt-8 p-5 bg-slate-800 rounded-2xl text-white shadow-lg">
-                    <h3 class="text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2 text-indigo-400">스마트 직인 컨트롤러</h3>
-                    <div class="space-y-4">
+                <div class="mt-8 p-6 bg-slate-900 rounded-3xl text-white shadow-2xl">
+                    <h3 class="text-xs font-black uppercase tracking-widest mb-5 flex items-center gap-2 text-indigo-400">직인 정밀 컨트롤러</h3>
+                    <div class="space-y-5">
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-400 mb-2">직인 크기 조절</label>
-                            <input type="range" id="stampSize" min="40" max="150" value="75" oninput="updateStampStyle()" class="w-full h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+                            <label class="block text-[10px] font-bold text-slate-400 mb-2">직인 크기 (화면/인쇄 동시 적용)</label>
+                            <input type="range" id="stampSize" min="40" max="180" value="80" oninput="updateStampStyle()" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500">
                         </div>
-                        <button onclick="resetStampPosition()" class="w-full py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-all border border-slate-600">위치 초기화</button>
+                        <button onclick="resetStampPosition()" class="w-full py-3 bg-slate-800 hover:bg-indigo-600 rounded-2xl text-xs font-black transition-all border border-slate-700 shadow-lg">위치 중앙 초기화</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- [오른쪽: 미리보기 섹션] -->
+        <!-- [우측: 미리보기 영역] -->
         <section class="lg:col-span-8 flex flex-col h-[calc(100vh-140px)]">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
-                <div class="flex border-b border-slate-100 px-6 no-print">
-                    <button onclick="switchTab('email')" id="tab-email" class="px-6 py-4 text-sm font-bold tab-active transition-all">📧 행정 안내문</button>
-                    <button onclick="switchTab('report')" id="tab-report" class="px-6 py-4 text-sm font-bold text-slate-400 transition-all">📋 용역준비보고서</button>
+            <div class="bg-white rounded-[2rem] shadow-2xl border border-slate-200 flex flex-col h-full overflow-hidden">
+                <!-- 탭 헤더 -->
+                <div class="flex border-b border-slate-100 px-10 no-print bg-slate-50/50">
+                    <button onclick="switchTab('email')" id="tab-email" class="px-10 py-6 text-sm font-black tab-active transition-all">📧 행정 안내문 (메일 텍스트)</button>
+                    <button onclick="switchTab('report')" id="tab-report" class="px-10 py-6 text-sm font-black text-slate-300 transition-all hover:text-slate-500">📋 용역준비보고서 (PDF 출력)</button>
                 </div>
 
-                <div class="flex-grow overflow-y-auto p-8 bg-slate-100/50 relative">
-                    <!-- 1. 메일 미리보기 -->
+                <div class="flex-grow overflow-y-auto p-10 bg-white relative">
+                    <!-- 1. 안내문 (메일) -->
                     <div id="view-email" class="block">
-                        <div id="emailContent" contenteditable="true" class="bg-white border border-slate-200 rounded-2xl p-10 text-[14px] leading-relaxed text-slate-800 shadow-sm focus:outline-none whitespace-pre-wrap min-h-[800px]"></div>
+                        <div id="emailContent" contenteditable="true" class="bg-slate-50 border border-slate-200 rounded-3xl p-12 text-[14.5px] leading-relaxed text-slate-800 focus:outline-none whitespace-pre-wrap min-h-[900px] shadow-inner font-medium"></div>
                     </div>
 
-                    <!-- 2. 보고서 미리보기 -->
+                    <!-- 2. 보고서 (PDF) -->
                     <div id="view-report" class="hidden relative">
-                        <div id="reportPaper" class="mx-auto bg-white p-[20mm] shadow-2xl border border-slate-200 w-[210mm] min-h-[297mm] relative overflow-hidden">
-                            <!-- 드래그 가능한 직인 -->
-                            <div id="dragStamp" class="stamp-container no-print" style="top: 865px; left: 585px; width: 75px; height: 75px;">
+                        <div id="reportPaper" class="mx-auto bg-white p-[20mm] shadow-2xl border border-slate-100 w-[210mm] min-h-[297mm] relative overflow-hidden">
+                            <!-- 드래그 직인 -->
+                            <div id="dragStamp" class="stamp-container no-print" style="top: 855px; left: 585px; width: 80px; height: 80px;">
                                 <img id="stampImgPreview" src="" alt="직인" class="stamp-image">
                                 <div class="resize-handle"></div>
                             </div>
-                            <!-- 인쇄용 직인 -->
+                            <!-- 인쇄 전용 직인 -->
                             <div id="printStamp" class="hidden print-area absolute" style="pointer-events: none;">
                                 <img id="stampImgPrint" src="" alt="직인" style="width: 100%; height: 100%;">
                             </div>
 
-                            <h1 class="text-3xl font-black text-center mb-12 border-b-4 border-double border-slate-900 pb-5 uppercase">용역 준비 확인 보고서</h1>
+                            <h1 class="text-4xl font-black text-center mb-16 border-b-4 border-double border-slate-900 pb-7 uppercase tracking-tight">용역 준비 확인 보고서</h1>
 
-                            <table class="report-table w-full mb-8 text-center border-collapse">
+                            <table class="report-table w-full mb-12 text-center border-collapse">
                                 <tbody>
-                                    <tr><th class="w-1/5">건 명</th><td colspan="3" id="rep-event" class="text-left font-black text-lg px-4 italic" contenteditable="true"></td></tr>
-                                    <tr><th>체험기간</th><td id="rep-period" class="w-2/5 text-sm" contenteditable="true"></td><th class="w-1/5">체험지역</th><td class="w-2/5" contenteditable="true" id="rep-region-display"></td></tr>
-                                    <tr><th>체험인원</th><td id="rep-count" contenteditable="true"></td><th>대표자</th><td id="rep-sign-name" class="font-bold"></td></tr>
-                                    <tr><th rowspan="2">용역업체</th><td colspan="3" class="text-left text-[11.5px] px-4 leading-tight py-3" id="rep-vendor-info" contenteditable="true"></td></tr>
+                                    <tr><th class="w-1/5">건 명</th><td colspan="3" id="rep-event" class="text-left font-black text-xl px-6 italic bg-slate-50/50" contenteditable="true"></td></tr>
+                                    <tr><th>체험기간</th><td id="rep-period" class="w-2/5 text-sm font-bold" contenteditable="true"></td><th class="w-1/5">체험지역</th><td class="w-2/5 font-bold" contenteditable="true" id="rep-region-display"></td></tr>
+                                    <tr><th>체험인원</th><td id="rep-count" class="font-bold" contenteditable="true"></td><th>대표자</th><td id="rep-sign-name" class="font-black text-xl"></td></tr>
+                                    <tr><th rowspan="2">용역업체</th><td colspan="3" class="text-left text-[12.5px] px-6 leading-relaxed py-5" id="rep-vendor-info" contenteditable="true"></td></tr>
                                 </tbody>
                             </table>
 
-                            <h3 class="text-sm font-black mb-3 flex items-center gap-2 text-slate-900 uppercase">세부 항목별 이행 준비 현황</h3>
-                            <table class="report-table w-full text-center border-collapse mb-10">
-                                <thead><tr><th class="w-24">구분</th><th class="w-20">이행</th><th>첨부 증빙(확보 내역)</th><th class="w-44">비고</th></tr></thead>
+                            <h3 class="text-[16px] font-black mb-5 flex items-center gap-2 text-slate-900 uppercase">세부 항목별 이행 준비 현황</h3>
+                            <table class="report-table w-full text-center border-collapse mb-14">
+                                <thead><tr><th class="w-24">구분</th><th class="w-20">이행</th><th>첨부 증빙(확보 내역)</th><th class="w-48">비고</th></tr></thead>
                                 <tbody>
-                                    <tr><td>항공권 확보</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">발권 확인 및 탑승객 명단 확보</td><td class="text-[11px]" contenteditable="true">확약 완료</td></tr>
-                                    <tr><td>현지 예약</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">현지 파트너사 확보 및 이행 확약 보고</td><td class="text-[11px]" contenteditable="true">준비 완료</td></tr>
-                                    <tr><td>차량 확보</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">차량 확보 확인서 및 보험 가입 확인</td><td class="text-[11px] font-bold text-indigo-700" id="rep-car-note" contenteditable="true"></td></tr>
-                                    <tr><td>숙박시설</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">시설 영업허가 및 공식 예약 데이터 확인</td><td id="rep-hotel" class="text-[11px] font-bold text-indigo-700 text-left whitespace-pre-wrap" contenteditable="true"></td></tr>
-                                    <tr><td>식단/위생</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">전 일정 확정 식단표 및 위생 점검 보고</td><td class="text-[11px]" contenteditable="true">점검 완료</td></tr>
-                                    <tr><td>여행자 보험</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]" contenteditable="true">단체 상해 보험 가입 증권 명단 확보</td><td class="text-[11px] font-bold" contenteditable="true">보장 범위 준수</td></tr>
-                                    <tr><td>세부 일정표</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[11px]">확정 일정 안내(스마트 가이드북 전송)</td><td class="text-blue-800 font-black text-[11px]">디지털 가이드북</td></tr>
+                                    <tr><td>항공권 확보</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">발권 확인 및 전 인원 E-티켓 리스트 확보</td><td class="text-[12px] font-bold" contenteditable="true">확약 완료</td></tr>
+                                    <tr><td>현지 예약</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">현지 파트너사 확보 및 이행 확약 완료</td><td class="text-[12px] font-bold" contenteditable="true">현지 준비 완료</td></tr>
+                                    <tr><td>차량 확보</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">차량 확보 확인서 및 운송 보험 확인</td><td class="text-[12px] font-black text-indigo-700 bg-indigo-50/20" id="rep-car-note" contenteditable="true"></td></tr>
+                                    <tr><td>숙박시설</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">시설 영업허가 확인 및 예약 확정 데이터</td><td id="rep-hotel" class="text-[12px] font-bold text-indigo-700 text-left whitespace-pre-wrap bg-indigo-50/20 px-4" contenteditable="true"></td></tr>
+                                    <tr><td>식단/위생</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">전 일정 확정 식단표 수립 및 위생 점검</td><td class="text-[12px] font-bold" contenteditable="true">점검 완료</td></tr>
+                                    <tr><td>여행자 보험</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]" contenteditable="true">단체 상해 보험 가입 증권 및 명단 완비</td><td class="text-[12px] font-bold" contenteditable="true">보장 범위 준수</td></tr>
+                                    <tr><td>세부 일정표</td><td class="text-green-800 font-bold">완료</td><td class="text-left text-[12px]">확정 일정 안내 (스마트 가이드북 시스템)</td><td class="text-blue-900 font-black text-[12px] bg-blue-50/20">디지털 연동</td></tr>
                                 </tbody>
                             </table>
 
-                            <div id="rep-notice" contenteditable="true" class="p-5 bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed rounded-xl">
-                                <p class="font-black text-slate-800 mb-2">[행정 고지 및 근거 사항]</p>
-                                <p>1. 본 보고서는 지방자치단체 입찰 및 계약 집행기준에 따라 투어메이커가 용역 착수 전 제반 준비를 완료했음을 공식 보고하는 문서입니다.</p>
-                                <p>2. 특히 해외 및 특정 인기 인프라의 경우, 현지 행정 체계 및 프라이버시 정책에 따라 특정 내부 서류의 외부 유출이 제한될 수 있습니다. 이에 당사는 관련 법규를 준수하여 <strong>'공식 예약 확인서(Booking Confirmation)'</strong> 및 <strong>'현지 이행 확약'</strong>으로 증빙을 갈음함으로써 실질적인 행정 완결성을 확보하였습니다.</p>
+                            <div id="rep-notice" contenteditable="true" class="p-8 bg-slate-50 border border-slate-200 text-[12px] text-slate-700 leading-relaxed rounded-[1.5rem] shadow-sm">
+                                <p class="font-black text-slate-900 mb-3 text-[13px]">[행정 고지 및 근거 사항]</p>
+                                <p>1. 본 보고서는 지방자치단체 입찰 및 계약 집행기준에 따라 투어메이커가 용역 착수 전 제반 실무 준비를 완벽히 마쳤음을 공식 보고하는 문서입니다.</p>
+                                <p>2. 특히 해외 및 특정 인기 인프라의 경우, 현지 행정 체계 및 프라이버시 정책(GDPR 등)으로 인해 특정 내부 서류(사업자등록증 원본 등)의 외부 유출이 법적으로 제한될 수 있습니다. 이에 당사는 관련 법규를 준수하여 <strong>'공식 예약 확인서(Booking Confirmation)'</strong> 및 <strong>'현지 이행 확약'</strong>으로 증빙을 갈음함으로써 실무적/행정적 완결성을 확보하였습니다.</p>
                             </div>
 
-                            <div class="mt-16 text-center relative">
-                                <p class="text-xl font-black mb-12 text-slate-900 italic" contenteditable="true">위와 같이 용역 수행을 위한 제반 준비가 완료되었음을 보고합니다.</p>
-                                <p class="text-lg font-black mb-10" id="rep-date-display"></p>
+                            <div class="mt-20 text-center relative">
+                                <p class="text-2xl font-black mb-14 text-slate-900 italic" contenteditable="true">위와 같이 용역 수행을 위한 제반 준비가 완료되었음을 보고합니다.</p>
+                                <p class="text-2xl font-black mb-12" id="rep-date-display"></p>
                                 <div class="flex justify-center items-center gap-10">
-                                    <div class="text-right"><p class="text-sm text-slate-400 mb-1 tracking-tighter">제출자(용역 수행사)</p><p class="text-2xl font-black text-slate-900" id="rep-footer-name"></p></div>
-                                    <div class="w-20 h-20 border-2 border-dashed border-slate-200 flex items-center justify-center text-[10px] text-slate-300">직인 위치</div>
+                                    <div class="text-right">
+                                        <p class="text-xs text-slate-500 mb-1 font-black uppercase tracking-widest">제출자 (용역 수행사)</p>
+                                        <p class="text-4xl font-black text-slate-900" id="rep-footer-name"></p>
+                                    </div>
+                                    <div class="w-24 h-24 border-2 border-dashed border-slate-300 flex items-center justify-center text-[10px] text-slate-400 rounded-2xl">직인 위치</div>
                                 </div>
                             </div>
-                            <div class="mt-20 text-right border-t-4 border-slate-900 pt-8"><h2 class="text-xl font-black" id="rep-school-target"></h2></div>
+
+                            <div class="mt-24 text-right border-t-4 border-slate-900 pt-10">
+                                <h2 class="text-2xl font-black tracking-tighter" id="rep-school-target"></h2>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -266,8 +281,8 @@
 
         function setTripType(type) {
             tripType = type;
-            document.getElementById('type-overseas').className = type === '국외' ? "flex-1 py-2 px-3 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-bold transition-all" : "flex-1 py-2 px-3 rounded-lg border border-slate-200 text-slate-500 text-xs font-bold transition-all";
-            document.getElementById('type-domestic').className = type === '국내' ? "flex-1 py-2 px-3 rounded-lg border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-bold transition-all" : "flex-1 py-2 px-3 rounded-lg border border-slate-200 text-slate-500 text-xs font-bold transition-all";
+            document.getElementById('type-overseas').className = type === '국외' ? "flex-1 py-3 px-3 rounded-2xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-black transition-all" : "flex-1 py-3 px-3 rounded-2xl border-2 border-slate-100 text-slate-400 text-xs font-bold transition-all";
+            document.getElementById('type-domestic').className = type === '국내' ? "flex-1 py-3 px-3 rounded-2xl border-2 border-indigo-600 bg-indigo-50 text-indigo-700 text-xs font-black transition-all" : "flex-1 py-3 px-3 rounded-2xl border-2 border-slate-100 text-slate-400 text-xs font-bold transition-all";
             syncAll();
         }
 
@@ -283,8 +298,11 @@
             const submissionDate = document.getElementById('dateInput').value || getDefaultDate();
             const repType = document.getElementById('repSelect').value;
 
-            let repInfo = repType === 'corp' ? { name: "주식회사 투어메이커 대표 이재명", addr: "강원특별자치도 정선군 정선읍 봉양3길 22-10, 3층", phone: "033-562-2551", stamp: corpStampUrl } : { name: "투어메이커 대표 허나연", addr: "강원특별자치도 태백시 광장로 17, 2층", phone: "010-9443-7881", stamp: indivStampUrl };
+            const repInfo = repType === 'corp' ? 
+                { name: "주식회사 투어메이커 대표 이재명", addr: "강원특별자치도 정선군 정선읍 봉양3길 22-10, 3층", phone: "033-562-2551", stamp: corpStampUrl } : 
+                { name: "투어메이커 대표 허나연", addr: "강원특별자치도 태백시 광장로 17, 2층", phone: "010-9443-7881", stamp: indivStampUrl };
 
+            // 안내문 생성 (요청대로 배상 문구 완전 삭제)
             const emailTemplate = `${school} 실무 이행 보고 및 행정 서류 대체 시스템 안내
 
 안녕하십니까,
@@ -293,7 +311,7 @@
 1. 실무 선제 이행 및 자금 집행 현황
 당사는 귀 기관의 안정적이고 원활한 행사 준비를 최우선으로 하여, 선금 수령(또는 사후 정산 청구) 전임에도 당사의 자금으로 아래와 같이 필수 항목에 대한 선제적 조치를 이행하고 있습니다.
 - 항공권 발권 (해외/제주 등): 단체 좌석의 확실한 확보와 발권 시한 준수를 위해, 당사 자금으로 선결제 및 발권을 완료하였습니다.
-- 현지 인프라 수배 (호텔/차량): 숙박 및 전세버스의 예약 확정을 위해 요구되는 선입금(Deposit) 및 보증금을 당사가 우선 집행하여 안정적인 인프라를 확보하고 있습니다. 
+- 현지 인프라 수배 (호텔/차량): 숙박 및 전세버스의 예약 확정을 위해 요구되는 선입금(Deposit) 및 보증금을 당사가 우선 집행하여 안정적인 인프라를 확보하고 있습니다. 
 - 프로그램 및 입장권 (공연/체험 등): 조기 매진이 우려되거나 사전 결제가 필수적인 현지 일정(뮤지컬 예매, 특수 체험, 주요 관광지 입장권 등)에 대해 당사 자금으로 예매를 완료하여 차질 없는 일정을 준비 중입니다.
 - 행정 절차: 본 행사의 결제 방식(선금 신청 또는 사후 정산)과 무관하게, 행정 처리 기간 중 발생할 수 있는 예약 지연 리스크를 방지하고자 당사가 자금 부담을 안고 실무를 선행하고 있음을 보고드립니다.
 
@@ -302,10 +320,10 @@
 🏠 숙박: 영업허가증(License) 및 예약확인서로 안전성을 확인합니다.
 🚌 차량: 운수국 인가 운송사업허가증 및 보험증권으로 합법성을 증명합니다.
 🍱 식사: 예정 또는 확정된 식단표(메뉴)를 통해 위생과 영양 상태를 관리합니다.
-📂 기타 및 추가 서류: 내국인 인솔자 및 현지 가이드 관련 서류(성범죄경력조회 등)와 출발 전 여행자보험 가입 증명서 등 필수 안전 서류를 철저히 완비하며, [T-safe24] 시스템을 통해 실시간 모니터링을 지원합니다. 즉시 징구할 수 없는 현지 서류들은 상황에 맞는 최적의 보완 증빙으로 갈음하여, 추후 아래 링크의 '출발전제출서류'함에 실시간 업로드하겠습니다. 
+📂 기타 및 추가 서류: 내국인 인솔자 및 현지 가이드 관련 서류(성범죄경력조회 등)와 출발 전 여행자보험 가입 증명서 등 필수 안전 서류를 철저히 완비하며, [T-safe24] 시스템을 통해 실시간 모니터링을 지원합니다. 즉시 징구할 수 없는 현지 서류들은 상황에 맞는 최적의 보완 증빙으로 갈음하여, 추후 아래 링크의 '출발전제출서류'함에 실시간 업로드하겠습니다. 
 
 3. 투어메이커의 역할 및 관리 범위
-당사는 용역 수행사로서 현지 업체와의 원활한 소통과 행정적 보완을 위해 최선을 다합니다. 
+당사는 용역 수행사로서 현지 업체와의 원활한 소통과 행정적 보완을 위해 최선을 다합니다. 
 다만, 천재지변이나 현지 법령 변경 등 당사의 통제 범위를 벗어난 불가항력적 상황에 대해서는 기관과 긴밀히 협의하여 최선의 대안을 도출하는 '전문적인 중재자' 역할을 수행합니다.
 
 📂 출발전제출서류: ${docUrl}
@@ -344,8 +362,8 @@
         }
 
         function switchTab(tab) {
-            document.getElementById('tab-email').className = tab === 'email' ? "px-6 py-4 text-sm font-bold tab-active transition-all" : "px-6 py-4 text-sm font-bold text-slate-400 transition-all";
-            document.getElementById('tab-report').className = tab === 'report' ? "px-6 py-4 text-sm font-bold tab-active transition-all" : "px-6 py-4 text-sm font-bold text-slate-400 transition-all";
+            document.getElementById('tab-email').className = tab === 'email' ? "px-10 py-6 text-sm font-black tab-active transition-all" : "px-10 py-6 text-sm font-black text-slate-300 transition-all";
+            document.getElementById('tab-report').className = tab === 'report' ? "px-10 py-6 text-sm font-black tab-active transition-all" : "px-10 py-6 text-sm font-black text-slate-300 transition-all";
             document.getElementById('view-email').style.display = tab === 'email' ? "block" : "none";
             document.getElementById('view-report').style.display = tab === 'report' ? "block" : "none";
             document.getElementById('dragStamp').style.display = tab === 'report' ? 'block' : 'none';
@@ -401,21 +419,25 @@
         }
 
         function resetStampPosition() {
-            dragStamp.style.top = '865px'; dragStamp.style.left = '585px'; dragStamp.style.width = '75px'; dragStamp.style.height = '75px';
-            document.getElementById('stampSize').value = 75; updatePrintStamp();
+            dragStamp.style.top = '855px'; dragStamp.style.left = '585px'; dragStamp.style.width = '80px'; dragStamp.style.height = '80px';
+            document.getElementById('stampSize').value = 80; updatePrintStamp();
         }
 
         async function copyEmail() {
             const content = document.getElementById('emailContent').innerText;
             try {
-                await navigator.clipboard.writeText(content);
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(content);
+                } else {
+                    const el = document.createElement('textarea');
+                    el.value = content;
+                    el.style.position = 'fixed'; el.style.left = '-9999px'; el.style.top = '0';
+                    document.body.appendChild(el); el.select();
+                    document.execCommand('copy'); document.body.removeChild(el);
+                }
                 alert('안내문 텍스트가 클립보드에 복사되었습니다.');
             } catch (err) {
-                const el = document.createElement('textarea');
-                el.value = content; document.body.appendChild(el);
-                el.select(); document.execCommand('copy');
-                document.body.removeChild(el);
-                alert('안내문 텍스트가 클립보드에 복사되었습니다.');
+                alert('복사 중 오류가 발생했습니다. 직접 드래그하여 복사해 주세요.');
             }
         }
 
